@@ -1,4 +1,5 @@
 from minio import Minio
+from kafka import KafkaConsumer
 import json
 import io
 
@@ -7,6 +8,12 @@ client = Minio(
     access_key="minio",
     secret_key="minio123",
     secure=False,
+)
+
+kafka_consumer = KafkaConsumer(
+    "ingest",
+    bootstrap_servers="localhost:9092",
+    auto_offset_reset="earliest"
 )
 
 def check_bucket_exists(bucket_name):
@@ -26,12 +33,15 @@ def create_object_in_minio(json_data, bucket_name, object_name):
     )
 
 if __name__ == "__main__":
-    data = {
-        "name": "John",
-        "age": 30,
-        "city": "New York",
-    }
     bucket_name = "data-lake"
     check_bucket_exists(bucket_name)
-    create_object_in_minio(data, bucket_name, "user.json")
-    print("Object created successfully")
+    
+    # Works like a While True
+    for message in kafka_consumer:
+        #
+        # Place your transformation function here
+        #
+        data = json.loads(message.value.decode("utf-8"))
+        file_name = f"{message.key.decode('utf-8')}.json"
+        create_object_in_minio(data, bucket_name, file_name)
+        print(f"Data {data} written to Minio as {file_name}")
