@@ -1,15 +1,25 @@
 from kafka import KafkaProducer
+import uuid
+from random import randint, choice
 
 
-kafka_producer = KafkaProducer(
-  bootstrap_servers="localhost:9092"
-)
+cities = ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose"]
+names = ["John", "Robert", "Michael", "William", "David", "Richard", "Joseph", "Thomas", "Charles", "Daniel"]
 
-for i in range(1, 30):
-    kafka_producer.send(
-	      topic="test", 
-	      value=f"New message 2.0 # {i}".encode("utf-8"),
-	      key=f"{i % 2}".encode("utf-8")
-    )
+if "__main__" == __name__:
+    kafka_producer = KafkaProducer(
+      bootstrap_servers="localhost:9092"
+    ) 
 
-kafka_producer.flush()
+    while True:
+        # A Dictionary object simulates json data
+        data = {
+          "name": choice(names),
+          "age": randint(20, 60),
+          "city": choice(cities),
+        }
+        kafka_producer.send(
+            topic="ingest",
+            value=data.encode("utf-8"),
+            key=uuid.encode("utf-8")
+        )
